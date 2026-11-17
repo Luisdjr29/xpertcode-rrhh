@@ -12,7 +12,16 @@ const tiposCarta = [
   { id: "referencias", label: "Carta de referencias", desc: "Referencia profesional para uso externo." },
   { id: "vac-mes",   label: "Vacaciones por mes",     desc: "Detalla las vacaciones cursadas en un mes específico." },
   { id: "vac-ano",   label: "Vacaciones por año",     desc: "Resumen de todas las vacaciones cursadas en un año." },
+  { id: "salida",    label: "Formulario de salida",   desc: "Notificación de salida del empleado (PDF)." },
 ];
+
+const tiposSalida = [
+  { id: "1", label: "1 - Renuncia", desc: "Es el comunicado que hace el trabajador para renunciar a su empleo de manera voluntaria. Dicha renuncia supone el fin de la relación laboral entre el empleado y la empresa." },
+  { id: "2", label: "2 - Desahucio", desc: "Es el acto por el cual una de las partes, mediante aviso previo a la otra y sin alegar causa, ejerce el derecho de poner término a un contrato por tiempo indefinido." },
+  { id: "3", label: "3 - Despido", desc: "El despido es la acción a través de la cual un empleador da por finalizado unilateralmente un contrato laboral con su empleado. En República Dominicana se utiliza el término despido cuando el empleado actúa violando las reglas de una manera inapropiada. Dígase: robo, pelear, dañar equipos de trabajo voluntariamente, etc. Todo debe ser notificado al Ministerio de Trabajo." },
+];
+
+
 
 const destinatarios = ["A quien corresponda", "Banco", "Embajada / Consulado", "Institución educativa", "Otro"];
 
@@ -46,6 +55,31 @@ export default function GenerarCarta({ empleado, onBack }: GenerarCartaProps) {
   const [refCedulaFirmante, setRefCedulaFirmante] = useState("001-0002619-4");
   const [refCargoFirmante, setRefCargoFirmante] = useState("Gerente General");
   const [refTelefono, setRefTelefono] = useState("809-796-3470");
+  const [salTipo, setSalTipo] = useState(
+    empleado.motivoSalida === "Renuncia" ? "1" : empleado.motivoSalida === "Desahucio" ? "2" : "1",
+  );
+  const [salFecha, setSalFecha] = useState(empleado.fechaSalida ?? "");
+  const [salSalario, setSalSalario] = useState(String(empleado.salarioActual ?? empleado.ajustes[0]?.salario ?? ""));
+  const [salVacaciones, setSalVacaciones] = useState("NO TIENE DIAS PENDIENTES");
+  const [salPrestamo, setSalPrestamo] = useState("");
+  const esSalida = tipo === "salida";
+  const tipoSalida = tiposSalida.find((t) => t.id === salTipo)!;
+  const filasSalida: [string, string][] = [
+    ["Nombre del empleado", empleado.nombre],
+    ["Posición", empleado.posicion],
+    ["Salario actual", salSalario],
+    ["Fecha de ingreso", empleado.ingreso],
+    ["Fecha de salida", salFecha],
+    ["Tipo de salida", tipoSalida.label],
+    ["Días pendientes de vacaciones", salVacaciones],
+    ["Préstamo por pagar", salPrestamo],
+  ];
+  const camposSalida = [
+    { label: "Fecha de salida", value: salFecha, set: setSalFecha },
+    { label: "Salario actual", value: salSalario, set: setSalSalario },
+    { label: "Días pendientes de vacaciones", value: salVacaciones, set: setSalVacaciones },
+    { label: "Préstamo por pagar", value: salPrestamo, set: setSalPrestamo },
+  ];
   const esReferencia = tipo === "referencias";
   const camposRef = [
     { label: "Empresa", value: refEmpresa, set: setRefEmpresa },
@@ -74,7 +108,9 @@ export default function GenerarCarta({ empleado, onBack }: GenerarCartaProps) {
     : [];
 
   const preview = generada
-    ? esReferencia
+    ? esSalida
+      ? ""
+      : esReferencia
       ? buildReferencia({
           empresa: refEmpresa, rnc: refRnc, ciudad: refCiudad, nombre: refNombre,
           cedula: refCedula, cargo: refCargo, ingreso: refIngreso, salario: refSalario,
@@ -224,8 +260,37 @@ export default function GenerarCarta({ empleado, onBack }: GenerarCartaProps) {
             </div>
           )}
 
+          {/* Datos del formulario de salida */}
+          {esSalida && (
+            <div className="space-y-2.5">
+              <div>
+                <label className="text-[10px] font-semibold tracking-wider uppercase text-[var(--muted-foreground)] block mb-1.5">
+                  Tipo de salida
+                </label>
+                <select
+                  value={salTipo}
+                  onChange={(e) => { setSalTipo(e.target.value); setGenerada(false); }}
+                  className="w-full text-xs px-3 py-2 border border-[var(--border)] rounded-[var(--radius)] bg-[var(--card)] outline-none focus:ring-1 focus:ring-[var(--ring)] text-[var(--foreground)]"
+                >
+                  {tiposSalida.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+                </select>
+                <p className="text-[10px] text-[var(--muted-foreground)] mt-1.5">{tipoSalida.desc}</p>
+              </div>
+              {camposSalida.map((c) => (
+                <div key={c.label}>
+                  <label className="text-[11px] text-[var(--foreground)] block mb-1">{c.label}</label>
+                  <input
+                    value={c.value}
+                    onChange={(e) => { c.set(e.target.value); setGenerada(false); }}
+                    className="w-full text-xs px-3 py-2 border border-[var(--border)] rounded-[var(--radius)] bg-[var(--card)] outline-none focus:ring-1 focus:ring-[var(--ring)] text-[var(--foreground)]"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
           {/* Destinatario */}
-          {!esReferencia && (
+          {!esReferencia && !esSalida && (
           <div>
             <label className="text-[10px] font-semibold tracking-wider uppercase text-[var(--muted-foreground)] block mb-1.5">
               Destinatario
@@ -263,7 +328,7 @@ export default function GenerarCarta({ empleado, onBack }: GenerarCartaProps) {
           </div>
 
           {/* Opciones */}
-          {!esVacaciones && !esReferencia && (
+          {!esVacaciones && !esReferencia && !esSalida && (
             <div>
               <label className="text-[10px] font-semibold tracking-wider uppercase text-[var(--muted-foreground)] block mb-2">
                 Opciones
@@ -350,7 +415,25 @@ export default function GenerarCarta({ empleado, onBack }: GenerarCartaProps) {
                 </div>
               </div>
 
-              <div className="whitespace-pre-line text-sm text-gray-800 leading-7 font-serif">{preview}</div>
+              {esSalida ? (
+                <div className="font-serif">
+                  <p className="text-center font-bold text-gray-900 mb-1">XPERTCODE, SRL</p>
+                  <p className="text-center font-semibold text-gray-900 mb-5">FORMULARIO PARA NOTIFICACIÓN DE SALIDA DE EMPLEADOS</p>
+                  <table className="w-full text-sm border border-gray-300">
+                    <tbody>
+                      {filasSalida.map(([k, v]) => (
+                        <tr key={k} className="border-t border-gray-300">
+                          <td className="w-2/5 px-3 py-2 bg-gray-50 font-semibold">{k}</td>
+                          <td className="px-3 py-2">{v}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <p className="mt-5 text-xs leading-5"><b>{tipoSalida.label}:</b> {tipoSalida.desc}</p>
+                </div>
+              ) : (
+                <div className="whitespace-pre-line text-sm text-gray-800 leading-7 font-serif">{preview}</div>
+              )}
 
               {/* Vacation table inside paper */}
               {esVacaciones && vacsFiltradas.length > 0 && (
