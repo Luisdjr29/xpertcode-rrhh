@@ -1,0 +1,10 @@
+{
+  "description": "Transforms basic HTML into a polished, user-friendly interface with complete flow navigation, enhancing user experience and engagement.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

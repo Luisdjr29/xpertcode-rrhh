@@ -1,0 +1,109 @@
+<h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);">Dashboard del Maestro de Empleados: lista de empleados a la izquierda y ficha del empleado seleccionado con historial de ajustes y vacaciones a la derecha</h2>
+<div style="display:grid;grid-template-columns:220px 1fr;gap:16px;min-height:480px;">
+
+<div style="background:var(--surface-1);border-radius:12px;padding:12px;">
+  <div style="position:relative;margin-bottom:10px;">
+    <i class="ti ti-search" style="position:absolute;left:10px;top:10px;font-size:16px;color:var(--text-muted);" aria-hidden="true"></i>
+    <input type="text" placeholder="Buscar empleado" style="width:100%;padding-left:32px;" />
+  </div>
+  <div id="emp-list" style="display:flex;flex-direction:column;gap:4px;"></div>
+</div>
+
+<div>
+  <div style="background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div id="detail-avatar" style="width:48px;height:48px;border-radius:50%;background:var(--bg-accent);display:flex;align-items:center;justify-content:center;font-weight:500;font-size:15px;color:var(--text-accent);"></div>
+        <div>
+          <p id="detail-name" style="font-weight:500;font-size:16px;margin:0;"></p>
+          <p id="detail-role" style="font-size:13px;color:var(--text-secondary);margin:0;"></p>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button id="btn-carta"><i class="ti ti-file" style="font-size:16px;vertical-align:-3px;margin-right:6px;" aria-hidden="true"></i>Generar carta</button>
+        <button id="btn-vac"><i class="ti ti-calendar" style="font-size:16px;vertical-align:-3px;margin-right:6px;" aria-hidden="true"></i>Solicitar vacaciones</button>
+      </div>
+    </div>
+    <div style="border-top:0.5px solid var(--border);margin-top:14px;padding-top:12px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;">
+      <div><p style="font-size:12px;color:var(--text-muted);margin:0 0 2px;">Cédula</p><p id="detail-cedula" style="font-size:13px;margin:0;"></p></div>
+      <div><p style="font-size:12px;color:var(--text-muted);margin:0 0 2px;">Cumpleaños</p><p id="detail-bday" style="font-size:13px;margin:0;"></p></div>
+      <div><p style="font-size:12px;color:var(--text-muted);margin:0 0 2px;">Ingreso</p><p id="detail-ingreso" style="font-size:13px;margin:0;"></p></div>
+      <div><p style="font-size:12px;color:var(--text-muted);margin:0 0 2px;">Estatus</p><p id="detail-estatus" style="font-size:13px;margin:0;"></p></div>
+    </div>
+  </div>
+
+  <div style="background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:1rem 1.25rem;margin-bottom:16px;">
+    <p style="font-size:14px;font-weight:500;margin:0 0 10px;"><i class="ti ti-trending-up" style="font-size:16px;vertical-align:-3px;margin-right:6px;color:var(--text-accent);" aria-hidden="true"></i>Historial de ajustes</p>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+      <thead><tr style="color:var(--text-secondary);text-align:left;">
+        <th style="padding:6px 4px;font-weight:400;">Fecha</th>
+        <th style="padding:6px 4px;font-weight:400;">Tipo</th>
+        <th style="padding:6px 4px;font-weight:400;text-align:right;">Salario</th>
+      </tr></thead>
+      <tbody id="ajustes-body"></tbody>
+    </table>
+  </div>
+
+  <div style="background:var(--surface-2);border:0.5px solid var(--border);border-radius:12px;padding:1rem 1.25rem;">
+    <p style="font-size:14px;font-weight:500;margin:0 0 10px;"><i class="ti ti-beach" style="font-size:16px;vertical-align:-3px;margin-right:6px;color:var(--text-accent);" aria-hidden="true"></i>Historial de vacaciones</p>
+    <table style="width:100%;font-size:13px;border-collapse:collapse;">
+      <thead><tr style="color:var(--text-secondary);text-align:left;">
+        <th style="padding:6px 4px;font-weight:400;">Periodo</th>
+        <th style="padding:6px 4px;font-weight:400;">Rango</th>
+        <th style="padding:6px 4px;font-weight:400;text-align:right;">Días</th>
+      </tr></thead>
+      <tbody id="vac-body"></tbody>
+    </table>
+  </div>
+</div>
+</div>
+<script>
+const empleados = [
+  { id:1, nombre:'Juan Pérez', posicion:'Desarrollador', cedula:'001-1234567-8', bday:'15 mar', ingreso:'15 ene 2025', estatus:'Activo',
+    ajustes:[{fecha:'01 ago 2026',tipo:'Aumento',salario:'RD$ 45,000'},{fecha:'01 jun 2025',tipo:'Aumento',salario:'RD$ 40,000'},{fecha:'15 ene 2025',tipo:'Ingreso',salario:'RD$ 35,000'}],
+    vacaciones:[{periodo:'2026',rango:'10–17 feb',dias:'8'},{periodo:'2025',rango:'20–27 jul',dias:'8'}] },
+  { id:2, nombre:'María Gómez', posicion:'QA Analyst', cedula:'001-9876543-2', bday:'02 sep', ingreso:'03 mar 2023', estatus:'Activo',
+    ajustes:[{fecha:'01 ene 2026',tipo:'Promoción',salario:'RD$ 52,000'},{fecha:'03 mar 2023',tipo:'Ingreso',salario:'RD$ 38,000'}],
+    vacaciones:[{periodo:'2026',rango:'05–19 ene',dias:'14'}] },
+  { id:3, nombre:'Carlos Read', posicion:'Backend Dev', cedula:'001-4561237-9', bday:'28 dic', ingreso:'10 ago 2024', estatus:'Activo',
+    ajustes:[{fecha:'10 ago 2024',tipo:'Ingreso',salario:'RD$ 41,000'}],
+    vacaciones:[] },
+];
+
+const listEl = document.getElementById('emp-list');
+function initials(n){ return n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+
+function renderList(activeId){
+  listEl.innerHTML = '';
+  empleados.forEach(e=>{
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px;border-radius:8px;cursor:pointer;' + (e.id===activeId ? 'background:var(--fill-ghost-selected);' : '');
+    row.innerHTML = '<div style="width:30px;height:30px;border-radius:50%;background:var(--bg-accent);display:flex;align-items:center;justify-content:center;font-weight:500;font-size:12px;color:var(--text-accent);">'+initials(e.nombre)+'</div><div><p style="font-size:13px;margin:0;font-weight:500;">'+e.nombre+'</p><p style="font-size:12px;margin:0;color:var(--text-secondary);">'+e.posicion+'</p></div>';
+    row.onclick = () => selectEmployee(e.id);
+    listEl.appendChild(row);
+  });
+}
+
+function selectEmployee(id){
+  const e = empleados.find(x=>x.id===id);
+  renderList(id);
+  document.getElementById('detail-avatar').textContent = initials(e.nombre);
+  document.getElementById('detail-name').textContent = e.nombre;
+  document.getElementById('detail-role').textContent = e.posicion;
+  document.getElementById('detail-cedula').textContent = e.cedula;
+  document.getElementById('detail-bday').textContent = e.bday;
+  document.getElementById('detail-ingreso').textContent = e.ingreso;
+  document.getElementById('detail-estatus').textContent = e.estatus;
+
+  const aBody = document.getElementById('ajustes-body');
+  aBody.innerHTML = e.ajustes.length ? e.ajustes.map(a=>'<tr style="border-top:0.5px solid var(--border);"><td style="padding:6px 4px;">'+a.fecha+'</td><td style="padding:6px 4px;">'+a.tipo+'</td><td style="padding:6px 4px;text-align:right;">'+a.salario+'</td></tr>').join('') : '<tr><td colspan="3" style="padding:10px 4px;color:var(--text-muted);">Sin registros</td></tr>';
+
+  const vBody = document.getElementById('vac-body');
+  vBody.innerHTML = e.vacaciones.length ? e.vacaciones.map(v=>'<tr style="border-top:0.5px solid var(--border);"><td style="padding:6px 4px;">'+v.periodo+'</td><td style="padding:6px 4px;">'+v.rango+'</td><td style="padding:6px 4px;text-align:right;">'+v.dias+'</td></tr>').join('') : '<tr><td colspan="3" style="padding:10px 4px;color:var(--text-muted);">Sin registros</td></tr>';
+}
+
+document.getElementById('btn-carta').onclick = () => sendPrompt('¿Cómo sería la pantalla para generar una carta de un empleado?');
+document.getElementById('btn-vac').onclick = () => sendPrompt('¿Cómo sería el formulario de solicitud de vacaciones?');
+
+selectEmployee(1);
+</script>
